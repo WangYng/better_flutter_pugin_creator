@@ -12,13 +12,13 @@
 import os.path
 
 # 插件名称
-plugin_name = ''
+plugin_name = 'better_plugin'
 
 # 插件作者
-plugin_author = ''
+plugin_author = '汪洋'
 
 # 插件描述
-plugin_description = ''
+plugin_description = 'A better plugin.'
 
 # 插件标识
 plugin_org = 'io.github.wangyng'
@@ -27,7 +27,7 @@ plugin_org = 'io.github.wangyng'
 plugin_package = plugin_org + '.' + plugin_name
 
 # 根地址
-root_dir = ''
+root_dir = '/Users/wangyang/Desktop'
 
 # 项目地址
 project_dir = os.path.join(root_dir, plugin_name)

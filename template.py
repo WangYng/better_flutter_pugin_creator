@@ -1,7 +1,7 @@
 # dart 代码模板
 dart_template = \
 '''
-Stream resultStream;
+Stream test1ResultStream;
 
 Future<void> test1();
 
