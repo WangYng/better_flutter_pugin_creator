@@ -1,10 +1,11 @@
-# better_flutter_pugin_creator
+# better_flutter_plugin_creator 
+快速创建功能更多丰富的 flutter plugin
 
 ### 功能: 
-- [x] 通过模板快速创建flutter插件
-- [x] 自动生成Dart代码
-- [x] 自动生成Java代码
-- [x] 自动生成Objective-C代码
+- [x] 通过模板定义flutter插件中的函数
+- [x] 自动生成对应的Dart函数
+- [x] 自动生成对应Java函数
+- [x] 自动生成对应Objective-C函数
 
 ### 用法: 
  1. 创建 env.py, 填入必须的参数
