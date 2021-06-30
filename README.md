@@ -37,10 +37,30 @@ flutter = ''
 ```
 
  2. 修改 template.py, 替换成需要生成的dart函数
+```python3
+dart_template = \
+'''
+Stream resultStream;
 
- 3. 使用pip3添加必须的第三方库依赖
+Future<void> test1();
+
+Future<String> test2(String p1);
+
+Future<int> test3(String p1, int p2);
+
+Future<bool> test4(String p1, int p2, bool p3);
+
+Future<double> test5(String p1, int p2, bool p3, double p4);
+'''
+
+```
+
+ 3. 使用pip添加必须的第三方库依赖
+```terminal
+pip3 install GitPython gitdb setuptools smmap
+```
     
  4. 运行脚本, 几秒后生成新的Flutter插件
-```python3
+```terminal
 python3 main.py
 ```
