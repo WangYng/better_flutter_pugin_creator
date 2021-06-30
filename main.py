@@ -1033,7 +1033,7 @@ dependencies:
   flutter:
     sdk: flutter
 
-  better_test:
+  %s:
     # When depending on this package from a real application you should use:
     #   better_test: ^x.y.z
     # See https://dart.dev/tools/pub/dependencies#version-constraints
@@ -1087,7 +1087,7 @@ flutter:
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages
 
-''' % (plugin_name, sdk_env, flutter_env)
+''' % (plugin_name, sdk_env, flutter_env, plugin_name)
 
     create_file(path, text)
 
@@ -1099,7 +1099,7 @@ def create_example_main_dart():
 import 'dart:async';
 
 import 'package:flutter/services.dart';
-import 'package:better_test/better_test.dart';
+import 'package:%s/%s.dart';
 
 void main() {
   runApp(MyApp());
@@ -1127,7 +1127,7 @@ class _MyAppState extends State<MyApp> {
   }
 }
 
-'''
+''' % (plugin_name, plugin_name)
 
     create_file(path, text)
 
