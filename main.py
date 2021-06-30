@@ -1,11 +1,14 @@
 import os
+import shutil
 import time
 from typing import Text
 
 import git
 
 from template import dart_template
-from env import project_dir, flutter, plugin_name, plugin_author, plugin_description, github_project, plugin_package
+from env import project_dir, flutter, plugin_name, plugin_author, plugin_description, plugin_package, \
+    root_dir, plugin_org
+
 
 # 下划线转驼峰
 def down_line_to_hump(text):
@@ -33,7 +36,7 @@ def check_flutter2():
 
 
 # 解析原始的dart函数
-def parse_field_and_func():
+def parse_template():
     # 解析的字段
     global fields
     fields = []
@@ -100,6 +103,7 @@ def dart_type_to_oc_type(text: Text):
     else:
         return text
 
+
 # 创建文本文件
 def create_file(path, text):
     if not os.path.exists(path[:path.rindex('/')]):
@@ -110,155 +114,64 @@ def create_file(path, text):
         file.close()
 
 
-def create_git_ignore():
-    path = project_dir + "/.gitignore"
-    text = '''.DS_Store
-.dart_tool/
+def create_default_dart_plugin():
+    if not os.path.exists(project_dir):
+        if not os.path.exists(root_dir):
+            os.mkdir(root_dir)
+        os.chdir(root_dir)
 
-.packages
-.pub/
+        # 创建默认插件
+        os.system('%s create --org %s --no-pub --template=plugin --platforms=android,ios -i objc -a java %s '
+                  % (flutter, plugin_org, plugin_name))
 
-build/
-'''
+        # 删除 License
+        os.remove(os.path.join(project_dir, 'LICENSE'))
 
-    create_file(path, text)
+        # 删除 pubspec.yaml
+        os.remove(os.path.join(project_dir, 'pubspec.yaml'))
 
+        # 删除 lib/plugin.dart
+        os.remove(os.path.join(project_dir, 'lib', plugin_name + '.dart'))
 
-def create_mate_data():
-    git_head = git.Repo(flutter + '/../..').head
-    hexsha = git_head.commit.hexsha
-    ref = git_head.ref
+        # 删除 test
+        shutil.rmtree(os.path.join(project_dir, 'test'))
 
-    path = project_dir + "/.matedata"
-    text = '''# This file tracks properties of this Flutter project.
-# Used by Flutter tool to assess capabilities and perform upgrades etc.
-#
-# This file should be version controlled and should not be manually edited.
+        # 删除 android/build.gradle
+        os.remove(os.path.join(project_dir, 'android', 'build.gradle'))
 
-version:
-  revision: %s
-  channel: %s
+        # 删除 android/src/main/java
+        shutil.rmtree(os.path.join(project_dir, 'android', 'src', 'main', 'java'))
 
-project_type: plugin
-''' % (hexsha, ref)
+        # 删除 ios/Classes
+        shutil.rmtree(os.path.join(project_dir, 'ios', 'Classes'))
 
-    create_file(path, text)
+        # 删除 example/pubspec.yaml
+        os.remove(os.path.join(project_dir, 'example', 'pubspec.yaml'))
 
+        # 删除 example/lib
+        shutil.rmtree(os.path.join(project_dir, 'example', 'lib'))
 
-def create_change_log():
-    path = project_dir + "/CHANGELOG.md"
-    text = '''## 0.0.1
-initial release.
-'''
-
-    create_file(path, text)
-
-
-def create_license():
-    localtime = time.localtime(time.time())
-    year = localtime.tm_year
-    path = project_dir + "/LICENSE"
-    text = '''BSD 3-Clause License
-
-Copyright (c) %s, %s
-All rights reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-
-1. Redistributions of source code must retain the above copyright notice, this
-   list of conditions and the following disclaimer.
-
-2. Redistributions in binary form must reproduce the above copyright notice,
-   this list of conditions and the following disclaimer in the documentation
-   and/or other materials provided with the distribution.
-
-3. Neither the name of the copyright holder nor the names of its
-   contributors may be used to endorse or promote products derived from
-   this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-''' % (year, plugin_author)
-
-    create_file(path, text)
-
-
-def create_read_me():
-    path = project_dir + "/README.md"
-    text = '''# %s
-
-%s
-
-## Install Started
-
-1. Add this to your **pubspec.yaml** file:
-
-```yaml
-dependencies:
-  %s: ^0.0.1
-```
-
-2. Install it
-
-```bash
-$ flutter packages get
-```
-
-## Normal usage
-
-```dart
-// TODO
-```
-
-## Feature
-- [x] TODO.
-''' % (plugin_name, plugin_description, plugin_name)
-
-    create_file(path, text)
-
-
-def create_project_iml():
-    path = project_dir + "/%s.iml" % plugin_name
-    text = '''<?xml version="1.0" encoding="UTF-8"?>
-<module type="JAVA_MODULE" version="4">
-  <component name="NewModuleRootManager" inherit-compiler-output="true">
-    <exclude-output />
-    <content url="file://$MODULE_DIR$">
-      <sourceFolder url="file://$MODULE_DIR$/lib" isTestSource="false" />
-      <excludeFolder url="file://$MODULE_DIR$/.dart_tool" />
-      <excludeFolder url="file://$MODULE_DIR$/.idea" />
-      <excludeFolder url="file://$MODULE_DIR$/.pub" />
-      <excludeFolder url="file://$MODULE_DIR$/build" />
-      <excludeFolder url="file://$MODULE_DIR$/example/.dart_tool" />
-      <excludeFolder url="file://$MODULE_DIR$/example/.pub" />
-      <excludeFolder url="file://$MODULE_DIR$/example/build" />
-    </content>
-    <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="Dart SDK" level="project" />
-    <orderEntry type="library" name="Flutter Plugins" level="project" />
-  </component>
-</module>
-'''
-
-    create_file(path, text)
+        # 删除 example/test
+        shutil.rmtree(os.path.join(project_dir, 'example', 'test'))
 
 
 def create_pubspec_yml():
+    if is_flutter2:
+        sdk_env = '>=2.12.0 <3.0.0'
+        flutter_env = '>=2.0.0'
+    else:
+        sdk_env = '>=2.7.0 <3.0.0'
+        flutter_env = '>=1.20.0'
+
     path = project_dir + "/pubspec.yaml"
     text = '''name: %s
 description: %s
 version: 0.0.1
-homepage: %s
-repository: %s
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev. This is preferred for private packages.
+
+# Uncomment this code block if you wish to publish to pub.dev.
+# homepage: https://github.com/WangYng 
+# repository: https://github.com/WangYng/better_plugin
 
 environment:
   sdk: "%s"
@@ -281,30 +194,15 @@ flutter:
         pluginClass: %sPlugin
       ios:
         pluginClass: %sPlugin
-'''
+''' % (plugin_name,
+       plugin_description,
+       sdk_env,
+       flutter_env,
+       plugin_package,
+       down_line_to_hump(plugin_name),
+       down_line_to_hump(plugin_name))
 
-    if not os.path.exists(path):
-
-        github_homepage = github_project[:github_project.rindex('/')]
-
-        if is_flutter2:
-            sdk_env = '>=2.12.0 <3.0.0'
-            flutter_env = '>=2.0.0'
-        else:
-            sdk_env = '>=2.7.0 <3.0.0'
-            flutter_env = '>=1.20.0'
-
-        file = open(path, 'w')
-        file.write(text % (plugin_name,
-                           plugin_description,
-                           github_homepage,
-                           github_project,
-                           sdk_env,
-                           flutter_env,
-                           plugin_package,
-                           down_line_to_hump(plugin_name),
-                           down_line_to_hump(plugin_name)))
-        file.close()
+    create_file(path, text)
 
 
 def create_api_dart_field(field):
@@ -336,18 +234,15 @@ def create_api_dart_func(func):
         func_param = func_param[:-2]
         func_param = func_param + '}'
 
+    func_result = '''return replyMap["result"];'''
     if func[0].startswith('int'):
-        default_result = '''return 0;'''
-        func_result = '''return replyMap["result"];'''
+        default_result = 'return 0;'
     elif func[0].startswith('String'):
-        default_result = '''return '';'''
-        func_result = '''return replyMap["result"];'''
+        default_result = 'return \'\';'
     elif func[0].startswith('double'):
-        default_result = '''return 0;'''
-        func_result = '''return replyMap["result"];'''
+        default_result = 'return 0;'
     elif func[0].startswith('bool'):
-        default_result = '''return false;'''
-        func_result = '''return replyMap["result"];'''
+        default_result = 'return false;'
     else:
         default_result = ''
         func_result = '''// noop'''
@@ -421,14 +316,14 @@ def create_plugin_dart():
     path = project_dir + '/lib/' + plugin_name + '.dart'
 
     api_text = \
-'''
+'''import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 class %sApi {
 ''' % down_line_to_hump(plugin_name)
     text = \
-'''
+'''import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:%s/%s';
 
@@ -465,35 +360,6 @@ _throwException(Map<String, dynamic> error) {
 '''
 
     create_file(api_path, api_text)
-    create_file(path, text)
-
-
-def create_android_gradle_wrapper():
-    path = project_dir + "/android/gradle/wrapper/gradle-wrapper.properties"
-    text = \
-'''distributionBase=GRADLE_USER_HOME
-distributionPath=wrapper/dists
-zipStoreBase=GRADLE_USER_HOME
-zipStorePath=wrapper/dists
-distributionUrl=https\://services.gradle.org/distributions/gradle-5.6.2-all.zip
-'''
-
-    create_file(path, text)
-
-
-def create_android_ignore():
-    path = project_dir + "/android/.gitignore"
-    text = \
-'''*.iml
-.gradle
-/local.properties
-/.idea/workspace.xml
-/.idea/libraries
-.DS_Store
-/build
-/captures
-'''
-
     create_file(path, text)
 
 
@@ -537,37 +403,6 @@ android {
         targetCompatibility JavaVersion.VERSION_1_8
     }
 }
-''' % plugin_package
-
-    create_file(path, text)
-
-
-def create_android_gradle_properties():
-    path = project_dir + "/android/gradle.properties"
-    text = \
-'''org.gradle.jvmargs=-Xmx1536M
-android.useAndroidX=true
-android.enableJetifier=true
-'''
-
-    create_file(path, text)
-
-
-def create_android_settings_gradle():
-    path = project_dir + "/android/settings.gradle"
-    text = \
-'''rootProject.name = '%s'
-''' % plugin_name
-
-    create_file(path, text)
-
-
-def create_android_manifest():
-    path = project_dir + '/android/src/main/AndroidManifest.xml'
-    text = \
-'''<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-  package="%s">
-</manifest>
 ''' % plugin_package
 
     create_file(path, text)
@@ -820,82 +655,6 @@ public class %sPlugin implements FlutterPlugin, %sApi {
 '''
    }
 '''
-
-    create_file(path, text)
-
-
-def create_ios_ignore():
-    path = project_dir + '/ios/.gitignore'
-    text = \
-'''.idea/
-.vagrant/
-.sconsign.dblite
-.svn/
-
-.DS_Store
-*.swp
-profile
-
-DerivedData/
-build/
-GeneratedPluginRegistrant.h
-GeneratedPluginRegistrant.m
-
-.generated/
-
-*.pbxuser
-*.mode1v3
-*.mode2v3
-*.perspectivev3
-
-!default.pbxuser
-!default.mode1v3
-!default.mode2v3
-!default.perspectivev3
-
-xcuserdata
-
-*.moved-aside
-
-*.pyc
-*sync/
-Icon?
-.tags*
-
-/Flutter/Generated.xcconfig
-/Flutter/flutter_export_environment.sh
-'''
-
-    create_file(path, text)
-
-
-def create_ios_podspec():
-    path = project_dir + '/ios/%s.podspec' % plugin_name
-    text = \
-'''#
-# To learn more about a Podspec see http://guides.cocoapods.org/syntax/podspec.html.
-# Run `pod lib lint better_wifi_manager.podspec' to validate before publishing.
-#
-Pod::Spec.new do |s|
-  s.name             = '%s'
-  s.version          = '0.0.1'
-  s.summary          = '%s'
-  s.description      = <<-DESC
-%s
-                       DESC
-  s.homepage         = 'http://example.com'
-  s.license          = { :file => '../LICENSE' }
-  s.author           = { 'Your Company' => 'email@example.com' }
-  s.source           = { :path => '.' }
-  s.source_files = 'Classes/**/*'
-  s.public_header_files = 'Classes/**/*.h'
-  s.dependency 'Flutter'
-  s.platform = :ios, '8.0'
-
-  # Flutter.framework does not contain a i386 slice.
-  s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES', 'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'i386' }
-end
-''' % (plugin_name, plugin_description, plugin_description)
 
     create_file(path, text)
 
@@ -1249,32 +1008,140 @@ def create_ios_plugin():
     create_file(m_path, m_text)
 
 
+def create_example_pubspec_yml():
+    if is_flutter2:
+        sdk_env = '>=2.12.0 <3.0.0'
+        flutter_env = '>=2.0.0'
+    else:
+        sdk_env = '>=2.7.0 <3.0.0'
+        flutter_env = '>=1.20.0'
+
+    path = os.path.join(project_dir, 'example', 'pubspec.yaml')
+    text = \
+'''name: %s_example
+description: Demonstrates how to use the better_test plugin.
+
+# The following line prevents the package from being accidentally published to
+# pub.dev using `pub publish`. This is preferred for private packages.
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+
+environment:
+  sdk: "%s"
+  flutter: "%s"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  better_test:
+    # When depending on this package from a real application you should use:
+    #   better_test: ^x.y.z
+    # See https://dart.dev/tools/pub/dependencies#version-constraints
+    # The example app is bundled with the plugin so we use a path dependency on
+    # the parent directory to use the current plugin's version.
+    path: ../
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+# For information on the generic Dart part of this file, see the
+# following page: https://dart.dev/tools/pub/pubspec
+
+# The following section is specific to Flutter.
+flutter:
+
+  # The following line ensures that the Material Icons font is
+  # included with your application, so that you can use the icons in
+  # the material Icons class.
+  uses-material-design: true
+
+  # To add assets to your application, add an assets section, like this:
+  # assets:
+  #   - images/a_dot_burr.jpeg
+  #   - images/a_dot_ham.jpeg
+
+  # An image asset can refer to one or more resolution-specific "variants", see
+  # https://flutter.dev/assets-and-images/#resolution-aware.
+
+  # For details regarding adding assets from package dependencies, see
+  # https://flutter.dev/assets-and-images/#from-packages
+
+  # To add custom fonts to your application, add a fonts section here,
+  # in this "flutter" section. Each entry in this list should have a
+  # "family" key with the font family name, and a "fonts" key with a
+  # list giving the asset and other descriptors for the font. For
+  # example:
+  # fonts:
+  #   - family: Schyler
+  #     fonts:
+  #       - asset: fonts/Schyler-Regular.ttf
+  #       - asset: fonts/Schyler-Italic.ttf
+  #         style: italic
+  #   - family: Trajan Pro
+  #     fonts:
+  #       - asset: fonts/TrajanPro.ttf
+  #       - asset: fonts/TrajanPro_Bold.ttf
+  #         weight: 700
+  #
+  # For details regarding fonts from package dependencies,
+  # see https://flutter.dev/custom-fonts/#from-packages
+
+''' % (plugin_name, sdk_env, flutter_env)
+
+    create_file(path, text)
+
+
+def create_example_main_dart():
+    path = os.path.join(project_dir, 'example', 'lib', 'main.dart')
+    text = \
+'''import 'package:flutter/material.dart';
+import 'dart:async';
+
+import 'package:flutter/services.dart';
+import 'package:better_test/better_test.dart';
+
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatefulWidget {
+  @override
+  _MyAppState createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: Scaffold(
+        appBar: AppBar(
+          title: const Text('Plugin example app'),
+        ),
+        body: Center(
+          child: Text('Running'),
+        ),
+      ),
+    );
+  }
+}
+
+'''
+
+    create_file(path, text)
+
+
 if __name__ == '__main__':
+
+    # 判断当前的flutter环境
     check_flutter2()
 
-    parse_field_and_func()
+    # 解析模板
+    parse_template()
 
-    # 创建项目目录
-    if not os.path.exists(project_dir):
-        os.mkdir(project_dir)
-
-    # 创建 .gitignore
-    create_git_ignore()
-
-    # 创建 .metadata
-    create_mate_data()
-
-    # 创建 .CHANGELOG.md
-    create_change_log()
-
-    # 创建 License
-    create_license()
-
-    # 创建 README.md
-    create_read_me()
-
-    # 创建 project.iml
-    create_project_iml()
+    # 创建默认插件
+    create_default_dart_plugin()
 
     # 创建 pubspec.yaml
     create_pubspec_yml()
@@ -1282,23 +1149,8 @@ if __name__ == '__main__':
     # 创建 lib/plugin.dart
     create_plugin_dart()
 
-    # 创建 android/gradle/wrapper/gradle-wrapper.properties
-    create_android_gradle_wrapper()
-
-    # 创建 android/.gitignore
-    create_android_ignore()
-
     # 创建 android/build.gradle
     create_android_build_gradle()
-
-    # 创建 android/gradle.properties
-    create_android_gradle_properties()
-
-    # 创建 android/settings.gradle
-    create_android_settings_gradle()
-
-    # 创建 android/src/main/AndroidManifest.xml
-    create_android_manifest()
 
     # 创建 android/src/main/java/包名/PluginApi.java
     create_android_plugin_api()
@@ -1309,12 +1161,6 @@ if __name__ == '__main__':
     # 创建 android/src/main/java/包名/Plugin.java
     create_android_plugin()
 
-    # 创建 ios/.gitignore
-    create_ios_ignore()
-
-    # 创建 ios/plugin.podspec
-    create_ios_podspec()
-
     # 创建 ios/PluginApi.h.m
     create_ios_plugin_api()
 
@@ -1323,3 +1169,9 @@ if __name__ == '__main__':
 
     # 创建 ios/Plugin.h.m
     create_ios_plugin()
+
+    # 创建 example/pubspec.yaml
+    create_example_pubspec_yml()
+
+    # 创建 example/lib/main.dart
+    create_example_main_dart()

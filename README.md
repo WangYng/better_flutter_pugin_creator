@@ -9,6 +9,8 @@
 ### 用法: 
  1. 创建 env.py, 填入必须的参数
 ```python3
+import os.path
+
 # 插件名称
 plugin_name = ''
 
@@ -18,14 +20,17 @@ plugin_author = ''
 # 插件描述
 plugin_description = ''
 
+# 插件标识
+plugin_org = 'io.github.wangyng'
+
 # 插件包名
-plugin_package = ''
+plugin_package = plugin_org + '.' + plugin_name
 
-# 项目本地地址
-project_dir = ''
+# 根地址
+root_dir = ''
 
-# 项目github地址
-github_project = ''
+# 项目地址
+project_dir = os.path.join(root_dir, plugin_name)
 
 # flutter命令地址
 flutter = ''
