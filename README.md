@@ -40,7 +40,7 @@ flutter = ''
 ```python3
 dart_template = \
 '''
-Stream resultStream;
+Stream test1ResultStream;
 
 Future<void> test1();
 
