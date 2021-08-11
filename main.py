@@ -517,6 +517,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.plugin.common.BasicMessageChannel;
 import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.EventChannel;
@@ -534,7 +535,8 @@ public interface %sApi {
     # 创建setup函数
     text = text + \
 '''
-    static void setup(BinaryMessenger binaryMessenger, %sApi api, Context context) {
+    static void setup(FlutterPlugin.FlutterPluginBinding binding, %sApi api, Context context) {
+        BinaryMessenger binaryMessenger = binding.getBinaryMessenger();
 ''' % down_line_to_hump(plugin_name)
 
     for field in fields:
@@ -631,12 +633,12 @@ public class %sPlugin implements FlutterPlugin, %sApi {
 
     @Override
     public void onAttachedToEngine(@NonNull FlutterPluginBinding binding) {
-        %sApi.setup(binding.getBinaryMessenger(), this, binding.getApplicationContext());
+        %sApi.setup(binding, this, binding.getApplicationContext());
     }
 
     @Override
     public void onDetachedFromEngine(@NonNull FlutterPluginBinding binding) {
-        %sApi.setup(binding.getBinaryMessenger(), null, null);
+        %sApi.setup(binding, null, null);
     }
     
 ''' % (plugin_package,
@@ -708,25 +710,25 @@ def create_ios_setup_function_block(func):
             if param[0] == 'String':
                 request_param = request_param + \
     '''
-                        NSString *%s = params[@"%s"];''' % \
+                    NSString *%s = params[@"%s"];''' % \
                                 (param[1],
                                  param[1])
             elif param[0] == 'bool':
                 request_param = request_param + \
     '''
-                        BOOL %s = [params[@"%s"] boolValue];''' % \
+                    BOOL %s = [params[@"%s"] boolValue];''' % \
                                 (param[1],
                                  param[1])
             elif param[0] == 'int':
                 request_param = request_param + \
     '''
-                        NSInteger %s = [params[@"%s"] integerValue];''' % \
+                    NSInteger %s = [params[@"%s"] integerValue];''' % \
                                 (param[1],
                                  param[1])
             elif param[0] == 'double':
                 request_param = request_param + \
     '''
-                        double %s = [params[@"%s"] doubleValue];''' % \
+                    double %s = [params[@"%s"] doubleValue];''' % \
                                 (param[1],
                                  param[1])
 
@@ -801,7 +803,7 @@ def create_ios_plugin_api():
 
 @interface %sApi : NSObject
 
-+ (void)setup:(NSObject<FlutterBinaryMessenger> *)messenger api:(id<%sApiDelegate>)api;
++ (void)setup:(NSObject<FlutterPluginRegistrar> *)registrar api:(id<%sApiDelegate>)api;
 
 @end
 
@@ -822,7 +824,8 @@ def create_ios_plugin_api():
 
 @implementation %sApi
 
-+ (void)setup:(NSObject<FlutterBinaryMessenger> *)messenger api:(id<%sApiDelegate>)api {
++ (void)setup:(NSObject<FlutterPluginRegistrar> *)registrar api:(id<%sApiDelegate>)api {
+    NSObject<FlutterBinaryMessenger> *messenger = [registrar messenger];
 ''' % (down_line_to_hump(plugin_name),
        plugin_author,
        year, mon, day,
@@ -984,7 +987,7 @@ def create_ios_plugin():
 
 + (void)registerWithRegistrar:(NSObject<FlutterPluginRegistrar>*)registrar {
     %sPlugin* instance = [[%sPlugin alloc] init];
-    [%sApi setup:[registrar messenger] api:instance];
+    [%sApi setup:registrar api:instance];
 }
 ''' % (down_line_to_hump(plugin_name),
        plugin_author,
@@ -1175,3 +1178,5 @@ if __name__ == '__main__':
 
     # 创建 example/lib/main.dart
     create_example_main_dart()
+
+    print("创建Flutter插件完成")

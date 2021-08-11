@@ -1,11 +1,10 @@
 # better_flutter_plugin_creator 
-快速创建功能更多丰富的 flutter plugin
+创建 flutter plugin 时, 同时创建 flutter plugin 的Flutter端函数, Android端函数 与 iOS端函数
 
 ### 功能: 
-- [x] 通过模板定义flutter插件中的函数
-- [x] 自动生成对应的Dart函数
-- [x] 自动生成对应Java函数
-- [x] 自动生成对应Objective-C函数
+- [x] 自动生成`template.py`中定义的Flutter端`Dart函数`
+- [x] 自动生成`Dart函数`对应的Android端`Java函数`
+- [x] 自动生成`Dart函数`对应的iOS端`Objective-C函数`
 
 ### 用法: 
  1. 创建 env.py, 填入必须的参数
@@ -34,7 +33,7 @@ root_dir = '/Users/wangyang/Desktop'
 project_dir = os.path.join(root_dir, plugin_name)
 
 # flutter命令地址
-flutter = ''
+flutter = '/Users/wangyang/library/flutter2/bin/flutter'
 ```
 
  2. 修改 template.py, 替换成需要生成的dart函数
@@ -65,3 +64,17 @@ pip3 install GitPython gitdb setuptools smmap
 ```terminal
 python3 main.py
 ```
+
+5. 填入`Android端`和`iOS端`模板函数中的需要实现的代码
+- 需要填入代码的位置已经加入了以下注释
+```python
+// TODO
+```
+
+6. 更新模块函数
+- 修改`template.py`文件
+- 删除Flutter端`xxx_api.dart`
+- 删除Android端`xxxApi.java`
+- 删除iOS端`xxxApi.h`和`xxxApi.m`
+- 重新执行本脚本
+
