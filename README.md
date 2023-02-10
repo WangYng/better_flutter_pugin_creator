@@ -34,6 +34,9 @@ project_dir = os.path.join(root_dir, plugin_name)
 
 # flutter命令地址
 flutter = '/Users/wangyang/library/flutter2/bin/flutter'
+
+# 覆盖 plugin.dart Plugin.java Plugin.h.m 的代码
+cover_plugin_file_code = True
 ```
 
  2. 修改 template.py, 替换成需要生成的dart函数
@@ -71,10 +74,8 @@ python3 main.py
 // TODO
 ```
 
-6. 更新模块函数
+6. 更新模板函数
 - 修改`template.py`文件
-- 删除Flutter端`xxx_api.dart`
-- 删除Android端`xxxApi.java`
-- 删除iOS端`xxxApi.h`和`xxxApi.m`
-- 重新执行本脚本
+- 修改`env.py`文件，设置是否覆盖 plugin 文件
+- 重新执行本脚本，会自动覆盖 api 文件，并根据设置自动覆盖 plugin 文件
 
