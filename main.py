@@ -98,6 +98,10 @@ def dart_type_to_oc_type(text: Text):
         return 'NSInteger'
     elif text == 'String':
         return 'NSString *'
+    elif text == 'Map':
+        return 'NSDictionary *'
+    elif text == 'List':
+        return 'NSArray *'
     else:
         return text
 
@@ -130,6 +134,12 @@ def create_default_dart_plugin():
 
         # 删除 lib/plugin.dart
         os.remove(os.path.join(project_dir, 'lib', plugin_name + '.dart'))
+
+        # 删除 lib/plugin_method_channel.dart
+        os.remove(os.path.join(project_dir, 'lib', plugin_name + '_method_channel.dart'))
+
+        # 删除 lib/plugin_platform_interface.dart
+        os.remove(os.path.join(project_dir, 'lib', plugin_name + '_platform_interface.dart'))
 
         # 删除 test
         shutil.rmtree(os.path.join(project_dir, 'test'))
@@ -238,9 +248,13 @@ def create_api_dart_func(func):
     elif func[0].startswith('String'):
         default_result = 'return \'\';'
     elif func[0].startswith('double'):
-        default_result = 'return 0;'
+        default_result = 'return 0.0;'
     elif func[0].startswith('bool'):
         default_result = 'return false;'
+    elif func[0].startswith('Map'):
+        default_result = 'return {};'
+    elif func[0].startswith('List'):
+        default_result = 'return [];'
     else:
         default_result = ''
         func_result = '''// noop'''
@@ -535,6 +549,7 @@ package %s;
 import android.content.Context;
 
 import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -631,9 +646,12 @@ def create_android_implement_function(func):
     func_param = func_param[:-2]
     func_default_result = ''
     func_default_result = 'return "";' if func[0] == 'String' else func_default_result
+    func_default_result = 'return new HashMap();' if func[0] == 'Map' else func_default_result
+    func_default_result = 'return new ArrayList();' if func[0] == 'List' else func_default_result
     func_default_result = 'return 0;' if func[0] == 'int' else func_default_result
     func_default_result = 'return false;' if func[0] == 'bool' else func_default_result
     func_default_result = 'return 0.0;' if func[0] == 'double' else func_default_result
+
     return \
 '''
     @Override
@@ -661,7 +679,9 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 
 import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
 
@@ -745,25 +765,37 @@ def create_ios_setup_function_block(func):
         for param in func[2]:
             if param[0] == 'String':
                 request_param = request_param + \
-    '''
+'''
                     NSString *%s = params[@"%s"];''' % \
+                                (param[1],
+                                 param[1])
+            elif param[0] == 'Map':
+                request_param = request_param + \
+'''
+                    NSDictionary *%s = params[@"%s"];''' % \
+                                (param[1],
+                                 param[1])
+            elif param[0] == 'List':
+                request_param = request_param + \
+'''
+                    NSArray *%s = params[@"%s"];''' % \
                                 (param[1],
                                  param[1])
             elif param[0] == 'bool':
                 request_param = request_param + \
-    '''
+'''
                     BOOL %s = [params[@"%s"] boolValue];''' % \
                                 (param[1],
                                  param[1])
             elif param[0] == 'int':
                 request_param = request_param + \
-    '''
+'''
                     NSInteger %s = [params[@"%s"] integerValue];''' % \
                                 (param[1],
                                  param[1])
             elif param[0] == 'double':
                 request_param = request_param + \
-    '''
+'''
                     double %s = [params[@"%s"] doubleValue];''' % \
                                 (param[1],
                                  param[1])
@@ -774,6 +806,17 @@ def create_ios_setup_function_block(func):
             func_param = func_param + ' ' + param[1] + ':' + param[1]
         func_param = func_param[1:]
         func_param = 'With' + func_param[0].upper() + func_param[1:]
+
+    func_result = '@(result)'
+    if func[0] == 'void':
+        func_result = 'nil'
+    elif func[0] == 'String':
+        func_result = 'result'
+    elif func[0] == 'Map':
+        func_result = 'result'
+    elif func[0] == 'List':
+        func_result = 'result'
+
     return \
 '''
     {
@@ -799,7 +842,7 @@ def create_ios_setup_function_block(func):
        '' if func[0] == 'void' else '%s result = ' % dart_type_to_oc_type(func[0]),
        func[1],
        func_param,
-       'nil' if func[0] == 'void' else ('result' if func[0] == 'String' else '@(result)'))
+       func_result)
 
 
 def create_ios_plugin_api():
@@ -974,6 +1017,8 @@ def create_ios_implement_function(func):
         func_param = 'With' + func_param[0].upper() + func_param[1:]
     func_default_result = ''
     func_default_result = 'return @"";' if func[0] == 'String' else func_default_result
+    func_default_result = 'return @{};' if func[0] == 'Map' else func_default_result
+    func_default_result = 'return @[];' if func[0] == 'List' else func_default_result
     func_default_result = 'return 0;' if func[0] == 'int' else func_default_result
     func_default_result = 'return NO;' if func[0] == 'bool' else func_default_result
     func_default_result = 'return 0.0;' if func[0] == 'double' else func_default_result
