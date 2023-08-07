@@ -3,8 +3,8 @@ import shutil
 import time
 from typing import Text
 
-from env import project_dir, flutter, plugin_name, plugin_author, plugin_description, plugin_package, root_dir, \
-    plugin_org, cover_plugin_file_code
+from env import project_dir, flutter, plugin_name, plugin_author, plugin_description, plugin_package, \
+    plugin_org, cover_plugin_file_code, root_dir
 from template import dart_template
 
 
@@ -27,7 +27,7 @@ def check_flutter2():
     global is_flutter2
     output = os.popen(flutter + ' --version')
     version = output.readline().split(' • ')[0].split(' ')[1]
-    if version.startswith('2'):
+    if version.startswith('2') or version.startswith('3'):
         is_flutter2 = True
     else:
         is_flutter2 = False
@@ -43,8 +43,18 @@ def parse_template():
     global funcs
     funcs = []
 
+    # 模板
+    template = dart_template
+
+    # 如果项目中已经模板文件，读取模板文件的内容
+    if os.path.exists(project_dir) and os.path.exists(os.path.join(project_dir, "TEMPLATE.md")):
+        file = open(os.path.join(project_dir, "TEMPLATE.md"), 'r')
+        template = file.read()
+        file.close()
+        print("检测到模版")
+
     # 开始解析
-    for dart_field_func in dart_template.split('\n'):
+    for dart_field_func in template.split('\n'):
         dart_field_func = dart_field_func.strip()
         if dart_field_func != '':
             if dart_field_func.startswith('Future<') and dart_field_func.endswith(');'):
@@ -1235,6 +1245,14 @@ class _MyAppState extends State<MyApp> {
     create_file(path, text)
 
 
+def save_template():
+    # 如果项目中已经有模板文件，不保存模板文件的内容
+    if os.path.exists(project_dir) and not os.path.exists(os.path.join(project_dir, "TEMPLATE.md")):
+        file = open(os.path.join(project_dir, "TEMPLATE.md"), 'w')
+        file.write(dart_template)
+        file.close()
+
+
 if __name__ == '__main__':
 
     # 判断当前的flutter环境
@@ -1281,5 +1299,8 @@ if __name__ == '__main__':
 
     # 创建 example/lib/main.dart
     create_example_main_dart()
+
+    # 保存当前的模板文件到插件中
+    save_template()
 
     print("创建Flutter插件完成")
